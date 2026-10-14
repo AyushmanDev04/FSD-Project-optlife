@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - OptiRoutine</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+    <header>
+        <div class="nav-container">
+            <a href="index.html" class="logo">⚡ OptiRoutine</a>
+            <ul class="nav-links">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="dashboard.html" class="active">Dashboard</a></li>
+                <li><a href="routines.html">Routines</a></li>
+                <li><a href="analytics.html">Analytics</a></li>
+            </ul>
+        </div>
+    </header>
+
+    <main>
+
+        <div class="page-top">
+            <h1 id="greeting">Today</h1>
+            <p id="todays-date"></p>
+            <button class="btn" onclick="openCheckinForm()">Daily check-in</button>
+            <a href="routines.html" class="btn btn-grey">Add a routine</a>
+        </div>
+
+        <div class="box">
+            <div class="row">
+                <div class="column">
+                    <p class="stat-title">Readiness score</p>
+                    <p class="stat-number" id="score-number">-</p>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="score-bar" style="width:0%"></div>
+                    </div>
+                    <p class="stat-note" id="score-text">You have not done today's check-in yet.</p>
+                </div>
+                <div class="column" id="score-details"></div>
+            </div>
+        </div>
+
+        <div class="stat-row">
+            <div class="stat-box">
+                <p class="stat-title">Done today</p>
+                <p class="stat-number" id="stat-today">0</p>
+                <p class="stat-note">routines completed</p>
+            </div>
+            <div class="stat-box">
+                <p class="stat-title">Longest streak</p>
+                <p class="stat-number" id="stat-streak">0</p>
+                <p class="stat-note" id="stat-streak-name">-</p>
+            </div>
+            <div class="stat-box">
+                <p class="stat-title">Last 14 days</p>
+                <p class="stat-number" id="stat-percent">0%</p>
+                <p class="stat-note">routines completed</p>
+            </div>
+            <div class="stat-box">
+                <p class="stat-title">Next reminder</p>
+                <p class="stat-number" id="stat-next" style="font-size:22px">-</p>
+                <p class="stat-note" id="stat-next-name"></p>
+            </div>
+        </div>
+
+        <h2>Today's routines</h2>
+        <div id="today-list"></div>
+
+        <h2>Reminder settings</h2>
+        <div class="box">
+
+            <div class="form-group">
+                <label>Browser notifications</label>
+                <p id="permission-text">Checking...</p>
+                <button class="btn btn-small" id="permission-button" onclick="askForNotificationPermission()">Turn on notifications</button>
+                <button class="btn btn-grey btn-small" onclick="sendTestNudge()">Send a test reminder</button>
+                <p class="form-help" id="permission-help"></p>
+            </div>
+
+            <div class="form-group">
+                <label for="input-lead">Remind me this many minutes early</label>
+                <input type="number" id="input-lead" min="0" max="120" onchange="changeLeadMinutes()">
+            </div>
+
+            <div class="form-group">
+                <label>
+                    <input type="checkbox" id="input-loss" onchange="changeLossAversion()">
+                    Use loss aversion wording
+                </label>
+                <p class="form-help">Reminders talk about the streak you could lose instead of the one you could start.</p>
+            </div>
+
+            <div class="form-group">
+                <label>
+                    <input type="checkbox" id="input-micro" onchange="changeAutoMicro()">
+                    Ask for the small version on low energy days
+                </label>
+                <p class="form-help">This is the Fogg Behavior Model part. Turn it off to always be asked for the full version.</p>
+            </div>
+
+        </div>
+
+    </main>
+
+    <footer>
+        <p>OptiRoutine - school project. All data is saved in your own browser.</p>
+    </footer>
+
+    <div id="popup-area"></div>
+
+    <script src="script.js"></script>
+    <script src="dashboard.js"></script>
+</body>
+</html>

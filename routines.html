@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Routines - OptiRoutine</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+    <header>
+        <div class="nav-container">
+            <a href="index.html" class="logo">⚡ OptiRoutine</a>
+            <ul class="nav-links">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="dashboard.html">Dashboard</a></li>
+                <li><a href="routines.html" class="active">Routines</a></li>
+                <li><a href="analytics.html">Analytics</a></li>
+            </ul>
+        </div>
+    </header>
+
+    <main>
+
+        <div class="page-top">
+            <h1>My routines</h1>
+            <p>Every routine is an If/Then sentence with a full version and a small version.</p>
+            <button class="btn" onclick="openNewRoutineForm()">+ New routine</button>
+            <button class="btn btn-grey" onclick="openTemplates()">Use a template</button>
+        </div>
+
+        <div id="routine-list"></div>
+
+        <h2>Data</h2>
+        <div class="box">
+            <p>Everything is saved in this browser only. Nothing is sent anywhere.</p>
+            <button class="btn btn-grey btn-small" onclick="exportData()">Save a backup file</button>
+            <button class="btn btn-grey btn-small" onclick="importData()">Load a backup file</button>
+            <button class="btn btn-grey btn-small" onclick="useDemoData()">Load demo data</button>
+            <button class="btn btn-red btn-small" onclick="eraseEverything()">Delete everything</button>
+            <p class="form-help">
+                The demo data replaces your routines with 4 example ones and 12 weeks of made up history,
+                so the analytics page has something to show.
+            </p>
+        </div>
+
+    </main>
+
+    <footer>
+        <p>OptiRoutine - school project. All data is saved in your own browser.</p>
+    </footer>
+
+    <div id="popup-area"></div>
+
+    <script src="script.js"></script>
+    <script src="routines.js"></script>
+</body>
+</html>
