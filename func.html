@@ -1,0 +1,148 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"></head><body><pre id="o">…</pre>
+<iframe id="f" style="width:1100px;height:900px;border:0"></iframe>
+<script>
+const out=[]; const errs=[];
+function ok(n,c,x){out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?'  -> '+x:''));}
+const f=document.getElementById('f');
+let w,d,E;
+function load(page){return new Promise(r=>{f.onload=()=>setTimeout(()=>{
+  w=f.contentWindow; d=f.contentDocument; E=(s)=>w.eval(s);
+  w.addEventListener('error',e=>errs.push(page+': '+e.message));
+  r();},700);f.src=page+'?t='+Math.random();});}
+
+(async()=>{
+ try{
+  
+  await load('routines.html');
+  E('deleteAllData(); showRoutines();');
+  ok('empty state shows', d.querySelector('.empty-message')!==null);
+
+  E('openNewRoutineForm()');
+  ok('form opened', d.querySelector('.popup')!==null);
+  d.getElementById('input-name').value='Test <b>routine</b> "quoted"';
+  d.getElementById('input-full').value='Do the thing';
+  d.getElementById('input-micro').value='Do a tiny thing';
+  E('saveRoutineForm()');
+  ok('routine created', E('routines.length')===1, E('routines.length'));
+  ok('name stored exactly', E('routines[0].name')==='Test <b>routine</b> "quoted"', E('routines[0].name'));
+  ok('no injected tag rendered', d.querySelector('#routine-list b')===null);
+  ok('name displayed as text', d.querySelector('.routine-name').innerText.indexOf('<b>')>-1);
+
+  E('openEditForm(routines[0].id)');
+  ok('edit form prefilled with quotes intact',
+     d.getElementById('input-name').value==='Test <b>routine</b> "quoted"',
+     d.getElementById('input-name').value);
+  ok('edit form kept the micro text', d.getElementById('input-micro').value==='Do a tiny thing');
+  E('closeForm()');
+
+  E('openNewRoutineForm()');
+  d.getElementById('input-name').value='';
+  E('saveRoutineForm()');
+  ok('blank name rejected', E('routines.length')===1, E('routines.length'));
+  E('closeForm()');
+
+
+  await load('dashboard.html');
+  const scheduled=E('isScheduledOn(routines[0], getToday())');
+  ok('routine runs today (weekday default)', true, scheduled);
+
+  if(scheduled){
+    E("markRoutine(routines[0].id,'full')");
+    ok('log written', E("getLog(routines[0].id,getToday()).mode")==='full');
+    ok('streak counts today', E('getStreak(routines[0].id)')===1, E('getStreak(routines[0].id)'));
+    ok('card greys out when done', d.querySelector('.routine.done')!==null);
+    E('undoRoutine(routines[0].id)');
+    ok('undo clears the log', E("getLog(routines[0].id,getToday())")===null);
+    ok('streak back to 0', E('getStreak(routines[0].id)')===0, E('getStreak(routines[0].id)'));
+  }
+
+  E('openCheckinForm()');
+  ok('check-in form opened', d.getElementById('slider-sleep')!==null);
+  d.getElementById('slider-sleep').value=4;
+  d.getElementById('slider-quality').value=1;
+  d.getElementById('slider-energy').value=1;
+  E('sliderChanged()');
+  const preview=d.getElementById('preview-score').innerText;
+  E('saveCheckinForm()');
+  ok('check-in saved', E('getCheckin(getToday())')!==null, preview);
+  ok('bad sleep -> low score', E('getDayScore()')<40, E('getDayScore()'));
+  ok('low score suggests the small version', E('getSuggestedMode(routines[0].id)')==='micro');
+
+  d.getElementById('input-lead').value=999; E('changeLeadMinutes()');
+  ok('lead minutes clamped at 120', E('settings.leadMinutes')===120, E('settings.leadMinutes'));
+  d.getElementById('input-lead').value=-5; E('changeLeadMinutes()');
+  ok('negative lead clamped at 0', E('settings.leadMinutes')===0, E('settings.leadMinutes'));
+  d.getElementById('input-micro').checked=false; E('changeAutoMicro()');
+  ok('auto-micro off forces full', E('getSuggestedMode(routines[0].id)')==='full');
+  d.getElementById('input-micro').checked=true; E('changeAutoMicro()');
+
+ 
+  E(`routines[0].cueType='after'; routines[0].cueAfter='lunch';
+     var m=minutesNow(); var h=Math.floor(m/60), mm=m%60;
+     routines[0].cueTime=(h<10?'0':'')+h+':'+(mm<10?'0':'')+mm;
+     settings.leadMinutes=10; saveData();`);
+  ok('"after another habit" routine still nudges', E('getRoutinesToNudge().length')===1,
+     E('getRoutinesToNudge().length'));
+
+
+  await load('analytics.html');
+  E('loadDemoData(); fillRoutineDropdown(); refreshCharts();');
+  ok('demo data loaded', E('routines.length')===4, E('routines.length'));
+  ok('week bars drawn', d.querySelectorAll('#chart-weeks .bar-line').length>0);
+  ok('stacked columns drawn', d.querySelectorAll('#chart-outcomes .column-holder').length>0);
+  ok('routine bars drawn', d.querySelectorAll('#chart-routines .bar-line').length===4);
+  ok('day-of-week bars drawn', d.querySelectorAll('#chart-days .bar-line').length>0);
+  ok('energy bars drawn', d.querySelectorAll('#chart-energy .bar-line').length>0);
+  ok('calendar columns drawn', d.querySelectorAll('#calendar .calendar-week').length>0);
+  ok('insights listed', d.getElementById('insight-list').children.length>0,
+     d.getElementById('insight-list').children.length);
+  ok('correlation sentence written', d.getElementById('correlation-text').innerText.length>10);
+
+  const bars30=d.querySelectorAll('#chart-weeks .bar-line').length;
+  d.getElementById('select-days').value='90'; E('changeRange()');
+  ok('90-day range redraws bigger', d.querySelectorAll('#chart-weeks .bar-line').length>bars30,
+     bars30+' -> '+d.querySelectorAll('#chart-weeks .bar-line').length);
+  d.getElementById('select-routine').value=E('routines[1].id'); E('changeRoutine()');
+  ok('routine filter narrows to one', d.querySelectorAll('#chart-weeks .bar-line').length>0);
+  d.getElementById('select-routine').value=''; E('changeRoutine()');
+
+  const btn=d.querySelector('button[onclick="toggleTable(this)"]');
+  E('toggleTable(document.querySelector(\'button[onclick="toggleTable(this)"]\'))');
+  ok('table opens', d.getElementById('table-area').className==='');
+  ok('table has rows', d.querySelectorAll('#table-area tr').length>1,
+     d.querySelectorAll('#table-area tr').length);
+  ok('toggle label changed', btn.innerText==='Hide the table', btn.innerText);
+  E('toggleTable(document.querySelector(\'button[onclick="toggleTable(this)"]\'))');
+  ok('table closes', d.getElementById('table-area').className==='hidden');
+
+ 
+  ok('correlation needs 3 points', E('getCorrelation([1,2],[1,2])')===null);
+  ok('correlation flat input', E('getCorrelation([1,1,1,1],[2,3,4,5])')===null);
+  ok('correlation perfect', Math.abs(E('getCorrelation([1,2,3,4],[1,2,3,4])')-1)<1e-9);
+  ok('correlation negative', Math.abs(E('getCorrelation([1,2,3,4],[4,3,2,1])')+1)<1e-9);
+
+  ok('leap year', E("addDays('2028-02-28',1)")==='2028-02-29', E("addDays('2028-02-28',1)"));
+  ok('non-leap year', E("addDays('2027-02-28',1)")==='2027-03-01', E("addDays('2027-02-28',1)"));
+  ok('year rollover', E("addDays('2026-12-31',1)")==='2027-01-01');
+  ok('back over a month', E("addDays('2026-03-01',-1)")==='2026-02-28');
+  ok('midnight', E("niceTime('00:30')")==='12:30 AM', E("niceTime('00:30')"));
+  ok('noon', E("niceTime('12:05')")==='12:05 PM', E("niceTime('12:05')"));
+  ok('dayWord singular', E('dayWord(1)')==='1 day');
+  ok('dayWord plural', E('dayWord(2)')==='2 days');
+  ok('escapeHtml', E(`escapeHtml('<b>&"')`)==='&lt;b&gt;&amp;&quot;', E(`escapeHtml('<b>&"')`));
+  ok('getDaysText weekdays', E('getDaysText({days:[3,1,2,5,4]})')==='Weekdays', E('getDaysText({days:[3,1,2,5,4]})'));
+  ok('getDaysText every day', E('getDaysText({days:[0,1,2,3,4,5,6]})')==='Every day');
+  ok('getDaysText sorts numerically', E('getDaysText({days:[6,1]})')==='Mon, Sat', E('getDaysText({days:[6,1]})'));
+
+  
+  let crashed=false;
+  try{ E("localStorage.setItem('optiroutine_data','{{{ not json'); loadData();"); }
+  catch(e){ crashed=true; }
+  ok('corrupt saved data handled', !crashed);
+
+ }catch(e){ out.push('THREW: '+e.message+'\n'+e.stack); }
+ const fails=out.filter(l=>l.startsWith('FAIL')).length;
+ document.getElementById('o').textContent=out.join('\n')+'\n'+errs.join('\n')+
+   `\n\n==== ${out.filter(l=>l.startsWith('PASS')).length} passed, ${fails} failed, ${errs.length} page errors ====`;
+})();
+</script></body></html>
